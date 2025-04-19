@@ -2,12 +2,23 @@
 <html lang="ja">
     <head>
         <meta charset="UTF-8" />
-        <title>問い合わせホーム</title>
+        <title>問い合わせフォーム</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
     </head>
 
     <body>
-        <h2>問い合わせホーム</h2>
+        <h2>問い合わせフォーム</h2>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li class="flash">{{message}}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+
         <form action="{{ url_for('contact_complete') }}" method="POST" novalidate="novalidate">
             <table>
                 <tr>

@@ -1,4 +1,18 @@
-from flask import Flask, render_template, url_for, current_app, g, request, redirect
+from email_validator import validate_email, EmailNotValidError
+from flask import (
+    Flask,
+    render_template,
+    url_for,
+    current_app,
+    g,
+    request,
+    redirect,
+    flash,
+)
+import logging
+from flask_debugtoolbar import DebugToolbarExtension
+import os
+from flask_mail import Mail, Message
 
 # FLASK_APP…どのファイルがアプリかを教える
 # $env:FLASK_DEBUG = "1"により
@@ -7,6 +21,22 @@ from flask import Flask, render_template, url_for, current_app, g, request, redi
 
 # Flaskをインスタンス化
 app = Flask(__name__)  # この"app"をFLASK_APPで指定している
+
+# SECRET_KEYを追加する
+app.config["SECRET_KEY"] = "2AZSMss3"
+
+app.logger.setLevel(logging.DEBUG)
+app.config["DEBUG_TB_INTERCEPT_REDIRECT"] = False
+toolbar = DebugToolbarExtension(app)
+
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
+app.config["MAIL_PORT"] = os.environ.get("MAIL_PORT")
+app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS")
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER")
+
+mail = Mail(app)
 
 
 # URLと実行する関数をマッピングする
@@ -63,5 +93,50 @@ def contact():
 @app.route("/contact/complete", methods=["GET", "POST"])
 def contact_complete():
     if request.method == "POST":
+        username = request.form["username"]
+        email = request.form["email"]
+        description = request.form["description"]
+
+        is_valid = True
+
+        if not username:
+            flash("usernameは必須です")
+            is_valid = False
+
+        if not email:
+            flash("mailadressは必須です")
+            is_valid = False
+
+        try:
+            validate_email(email)
+        except EmailNotValidError:
+            flash("mailadressの形式で入力して下さい")
+            is_valid = False
+
+        if not description:
+            flash("問い合わせ内容は必須です")
+            is_valid = False
+
+        if not is_valid:
+            return redirect(url_for("contact"))
+
+        send_email(
+            email,
+            "問い合わせありがとうございます",
+            "contact_mail",
+            username=username,
+            description=description,
+        )
+
+        flash("問い合わせありがとうございました")
         return redirect(url_for("contact_complete"))
+
     return render_template("contact_complete.html")
+
+
+def send_email(to, subject, template, **kwargs):
+    msg = Message(subject=subject, recipients=[to])
+    msg.body = render_template(f"{template}.txt", **kwargs)  # template + ".txt"
+    msg.html = render_template(f"{template}.html", **kwargs)
+
+    mail.send(msg)
