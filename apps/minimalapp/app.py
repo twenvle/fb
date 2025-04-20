@@ -8,6 +8,8 @@ from flask import (
     request,
     redirect,
     flash,
+    make_response,
+    session,
 )
 import logging
 from flask_debugtoolbar import DebugToolbarExtension
@@ -26,7 +28,7 @@ app = Flask(__name__)  # この"app"をFLASK_APPで指定している
 app.config["SECRET_KEY"] = "2AZSMss3"
 
 app.logger.setLevel(logging.DEBUG)
-app.config["DEBUG_TB_INTERCEPT_REDIRECT"] = False
+app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
 toolbar = DebugToolbarExtension(app)
 
 app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
@@ -87,7 +89,15 @@ with app.test_request_context("/users?updated=true"):
 
 @app.route("/contact")
 def contact():
-    return render_template("contact.html")
+    # レスポンスオブジェクトを取得
+    responce = make_response(render_template("contact.html"))
+
+    # クッキーを設定する
+    responce.set_cookie("flaskbook key", "flaskbook value")
+
+    # セッションを設定する
+    session["username"] = "ichiro"
+    return responce
 
 
 @app.route("/contact/complete", methods=["GET", "POST"])
