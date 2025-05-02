@@ -15,6 +15,9 @@ class User(db.Model, UserMixin):  # userクラスは，データベースとpyth
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
+    # backrefを利用しrelation情報を設定する
+    user_images = db.relationship("UserImage", backref="user")
+
     @property
     def password(self):
         raise AttributeError("読み取り不可")
