@@ -7,6 +7,7 @@ basedir = Path(__file__).parent.parent
 class BaseConfig:
     SECRET_KEY = "qwrty"  # Flask全体のセキュリティキー
     WTF_CSRF_SECRET_KEY = "aiueo"  # CSRF対策のためのセキュリティキー
+    UPLOAD_FOLDER = str(Path(basedir, "apps", "images"))  # 画像アップロード先のフォルダ
 
 
 class LocalConfig(BaseConfig):
