@@ -12,3 +12,7 @@ class UploadImageForm(FlaskForm):
         ]
     )
     submit = SubmitField("アップロード")
+
+
+class DeleteForm(FlaskForm):
+    submit = SubmitField("削除")

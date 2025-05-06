@@ -2,8 +2,8 @@ import uuid
 from pathlib import Path
 from apps.app import db
 from apps.crud.models import User
-from apps.detector.models import UserImage
-from apps.detector.forms import UploadImageForm
+from apps.detector.models import UserImage, UserImageTag
+from apps.detector.forms import UploadImageForm, DeleteForm
 from flask import (
     Blueprint,
     render_template,
@@ -11,6 +11,7 @@ from flask import (
     send_from_directory,
     redirect,
     url_for,
+    flash,
 )
 from flask_login import current_user, login_required
 
@@ -26,7 +27,11 @@ def index():
         .all()
     )
 
-    return render_template("detector/index.html", user_images=user_images)
+    delete_form = DeleteForm()
+
+    return render_template(
+        "detector/index.html", user_images=user_images, delete_form=delete_form
+    )
 
 
 @dt.route("/images/<path:filename>")
@@ -59,3 +64,24 @@ def upload_image():
 
         return redirect(url_for("detector.index"))
     return render_template("detector/upload.html", form=form)
+
+
+@dt.route("/images/delete/<string:image_id>", methods=["POST"])
+@login_required
+def delete_image(image_id):
+    try:
+        # user_image_tagsテーブルからレコードを削除する
+        db.session.query(UserImageTag).filter(
+            UserImageTag.user_image_id == image_id
+        ).delete()
+
+        # user_imageテーブルからレコードを削除する
+        db.session.query(UserImage).filter(UserImage.id == image_id).delete()
+
+        db.session.commit()
+    except Exception as e:
+        flash("画像削除処理でエラーが発生しました。")
+        # エラーログ出力
+        current_app.logger.error(e)
+        db.session.rollback()
+    return redirect(url_for("detector.index"))
