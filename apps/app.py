@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from pathlib import Path
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -51,4 +51,18 @@ def create_app(config_key):
 
     app.register_blueprint(dt_views.dt)
 
+    app.register_error_handler(404, page_not_found)
+    app.register_error_handler(500, internal_server_error)
+
     return app  # create_app関数の中で箱(Flask)に色々入れて，最後にその箱を返しているのが return app
+
+
+# 登録したエンドポイント名の関数を作成し、404や500が発生した際に指定したHTMLを返す
+def page_not_found(e):
+    """404 Not Found"""
+    return render_template("404.html"), 404
+
+
+def internal_server_error(e):
+    """500 Internal Server Error"""
+    return render_template("500.html"), 500

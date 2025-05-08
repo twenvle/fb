@@ -147,3 +147,11 @@ def search():
         user_image_tag_dict=user_image_tag_dict,
         delete_form=delete_form,
     )
+
+
+@dt.errorhandler(404)
+def page_not_found(e):
+    return render_template("detector/404.html"), 404
+
+
+2
